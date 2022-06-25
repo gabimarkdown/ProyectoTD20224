@@ -1,31 +1,90 @@
 ---
-title: "hola"
+title: "ESTUDIO DEL NIVEL DE RUIDO EN EL BARRIO DE RUZAFA"
+subtitle: "Grado en Ciencia de Datos-Universidad de Valencia"
 author: "Gabriel Val Ballester"
-date: "25/6/2022"
-output: html_document
+date:  "`r Sys.Date()`"
+ 
+params:
+  lang: ES
+lang: "`r switch(params$lang, ES = 'es-ES', EN = 'en-US')`"
+output:
+  html_document:
+    echo: yes
+    number_sections: yes
+    theme: lumen
+    toc: yes
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+    number_sections: yes
+  html_notebook:
+    echo: yes
+    number_sections: yes
+    toc: yes
+language:
+  label:
+    fig: 'Figura '
+    tab: 'Tabla '
+    eq: 'Ecuación '
+    thm: 'Teorema '
+    lem: 'Lema '
+    def: 'Definición '
+    cor: 'Corolario '
+    prp: 'Proposición '
+    exm: 'Ejemplo '
+    exr: 'Ejercicio '
+    proof: 'Demostración. '
+    remark: 'Nota: '
+    solution: 'Solución. '
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, cache = F,  message = F, warning = F, tidy = F, include=FALSE}
+# CONFIGURACIÓN GENERAL
+library(knitr)
+options(width = 100)
+opts_chunk$set(echo=F, message = F, error = F, warning = F, comment = NA, fig.align = 'center', dpi = 200, tidy = F, cache.path = '.cache/', fig.path = './figura/')
+knit_hooks$set(inline = function(x) {
+  
+  if(is.numeric(x)) {
+    round(x, getOption('digits'))
+  } else {
+    paste(as.character(x), collapse = ', ')
+  }
+})
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r, echo = FALSE, include=FALSE}
+# Especificamos las librerías necesarias en esta lista
+packages = c("tidyverse","knitr", "lubridate", "readr", "dplyr", "forcats", "lubridate", "magrittr", "stringr", "tibble", "tidyr", "datasets", "RColorBrewer","nycflights13", "base", "datasets", "ggplot2", "plotly", "highcharter")
+package.check <- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE,repos='http://cran.rediris.es')
+  }
+  library(x, character.only = TRUE)
+})
+search()
 ```
 
-## Including Plots
+# .Introduccion
+Este proyecto tiene como objetivo analizar los datos obtenidos por catorce sonómetros situados en distintas calles del barrio de Ruzafa.Trataremos de saber el porqué de ciertos niveles de ruido en ciertas épocas del año a través de visualizaciones que nos favoreceran su comprensión.
 
-You can also embed plots, for example:
+Estos datos han sido recogidos por parte del Ayuntamiento de Valencia en su portal de datos abiertos:
+https://www.valencia.es/dadesobertes/es/data/?groups=medio-ambiente
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+
+# .Descarga de datos
+Para la descarga de los datos, hemos optado por automatizar la descarga, ya que cada día se añade un nuevo registro. Para ello, hemos obtenido los identificadores y los nombres que queriamos para cada uno de los archivos y con esto hemos podido automatizar el proceso de descarga y guardado de ellos.
+```{r}
+
+ident<-c("75a878a9-2bd9-4619-98ec-3224be867c65","784f4732-abc5-41b1-857b-42decb306643","6fa5210b-f9c7-47c8-9d1f-ddb7568f62de","1b41d86b-3939-488b-9035-92d851245924","5a050cef-1107-4b3b-8e61-5daf5cfb2ca4","ff8678b6-748e-4908-ab5b-9c7ff567da61","d842601d-35b4-4b88-96f7-42e8f68e1b74","64e4b7b4-e633-4753-b0ef-a57d785076f8","3b2fe345-08fc-49d7-85c8-8cccf6a7e814","ea008906-e06a-4c72-9fe6-3238e212aae4","a54fb175-8013-460a-a2f0-22de7a210d7a","e580f492-a2f6-4305-af24-f4c4d05b911c","8058f1a5-c605-4baa-afff-2f638efb767f","b26d42ae-2be9-481a-9b79-71392d9e80bd")
+
+names(ident)<-c("Cadiz_16","Doctor_Serrano_21","Cadiz_3","Puerto_Rico_21","Cuba_3","Vivons_Chaflan_Cadiz","Sueca_32","Salvador_Abril_Chaflan_Maestro_Jose_Serrano","General_Prim_Chaflan_Donoso_Cortes","Carles_Cervera_Chaflan_Reina_Donya_Maria","Sueca_Esq_Denia","Sueca_2","Sueca_61","Carles_Cervera_34")
+
+direcc<- paste("https://opendata.vlci.valencia.es/datastore/dump/", ident ,"?format=csv&bom=true",sep="")
+guard<-paste("./data/",names(ident),".csv",sep="")
+
+for (i in 1:14){
+  download.file(direcc[i],guard[i])
+}
+
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-PRUEBA
