@@ -447,3 +447,34 @@ g2022
 ```
 
 Como podemos ver, en líneas generales todas la estaciones suelen tener una media de ruido parecida estando el verano un escalón por encima. Algo también a destacar es la disparidad que encontramos en el año 2021 donde el ruido captado en verano es mayor que en el resto de estaciones esto es debido a que en 2021 las fallas se celebraron a principios de septiembre
+
+## ¿En que año hubo mas ruido?
+El año con mas ruido se refiere al año donde mas ruido hubo de una manera continuada ,sin tener en cuenta los altos y bajos de sonido que puede haber durante un año
+
+Esto se hace con la media.
+
+Usamos el dataframe amd con las columnas Anyo mes y dia
+
+Lo haremos de forma grafica y numerica
+
+Forma grafica
+```{r}
+#si<-amd%>%
+#  group_by(year)%>%summarise_at(vars(Nivel_Sonoro), list (Media = mean))
+```
+Forma numerica
+```{r}
+#amd %>% group_by(year) %>% summarise_at(vars(Valores),mean)
+```
+Como podemos ver el año donde hubo mas ruido fue el 2022
+
+Aquí vemos gráficamente cual es la media de cada año.
+# Conclusiones finales
+
+Para concluir, haremos un repaso general de las conclusiones que hemos extraído de los distintos gráficos y tablas.
+
+*La celebracion de las Fallas en Valencia incrementa considerablemente el nivel de ruido.
+
+*Los niveles de ruido son superiores o cercanos a los 55 db,que es el limite maximo permisible para las zonas residenciales
+
+*
