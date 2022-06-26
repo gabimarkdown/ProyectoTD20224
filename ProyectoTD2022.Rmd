@@ -88,3 +88,194 @@ for (i in 1:14){
 }
 
 ```
+De esta parte del estudio obtenemos catorce archivos csv ,donde cada uno de ellos contiene la informacion respectiva a cada uno de los sonómetros situados,colocados en una carpeta llamada data.
+La correspondencia entre el sonómetro y el nombre de el archivo que contiene su información es
+
+**‘data/Sueca_Esq_Denia.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Sueca Esq. Denia
+
+**‘data/Cadiz_16.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Cádiz, 16
+
+**‘data/Cadiz_3.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Cádiz, 3
+
+**‘data/Cuba_3.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Cuba, 3
+
+**‘data/Sueca_2.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Sueca, 2
+
+**‘data/Sueca_61.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Sueca, 61
+
+**‘data/Sueca_32.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Sueca, 32
+
+**‘data/Carles_Cervera_Chaflan_Reina_Donya_Maria.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Carles Cervera, Chaflán Reina Doña María
+
+**‘data/Salvador_Abril_Chaflan_Maestro_Jose_Serrano.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Salvador Abril Chaflán Maestro José Serrano
+
+**‘data/Vivons_Chaflan_Cadiz.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Vivons Chaflán Cádiz
+
+**‘data/Carles_Cervera_34.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Carles Cervera, 34
+
+**‘data/Puerto_Rico_21.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Puerto Rico, 21
+
+**‘data/Doctor_Serrano_21.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle Doctor Serrano, 21
+
+**‘data/General_Prim_Chaflan_Donoso_Cortes.csv’** : Datos diarios del sensor de ruido ubicado en el barrio de Ruzafa, en la calle General Prim Chaflán Donoso Cortés
+
+# Carga de datos
+La carga de datos se hará de forma automatizada,cogiendo cada uno de los archivos,corvintiendolos a informacion de estructura dataframe y asignandolos a cada uno de los nombres que queremos que tengan.
+
+Hemos creado una columna extra para cada datframe llamada **Place**
+```{r}
+for (i in 1:14){
+  assign(names(ident)[i],
+        read_csv(guard[i])
+  )
+}
+
+Cadiz_3$Place = "Cadiz 3"
+Cadiz_16$Place = "Cadiz 16"
+Carles_Cervera_34$Place = "Carles Cervera 34"
+Carles_Cervera_Chaflan_Reina_Donya_Maria$Place = "Carles Cervera Chaflan"
+Cuba_3$Place = "Cuba 3"
+Doctor_Serrano_21$Place = "Doctor Serrano"
+General_Prim_Chaflan_Donoso_Cortes$Place = "General Prim"
+Puerto_Rico_21$Place = "Puerto Rico 21"
+Salvador_Abril_Chaflan_Maestro_Jose_Serrano$Place = "Salvador Abril"
+Sueca_2$Place = "Sueca 2"
+Sueca_32$Place = "Sueca 32"
+Sueca_61$Place = "Sueca 61"
+Sueca_Esq_Denia$Place = "Sueca esq Denia"
+Vivons_Chaflan_Cadiz$Place = "Vivons Chaflan"
+```
+## Unificación de los datos
+Para poder trabajar comodamente y de una manera eficiente con los datos vamos a unificarlos todos en un solo dataframe
+
+Hay que tener ciertas cosas en cuenta para que la unificación sea posibles
+
+Primero me creo una lista de los dataframes para poder trabajar bien con ella
+```{r}
+data<-list( General_Prim_Chaflan_Donoso_Cortes, Cadiz_16, Cadiz_3, Cuba_3,Sueca_2, Sueca_61, Sueca_32, Carles_Cervera_Chaflan_Reina_Donya_Maria,Puerto_Rico_21, Vivons_Chaflan_Cadiz, Carles_Cervera_34, Salvador_Abril_Chaflan_Maestro_Jose_Serrano,Doctor_Serrano_21,Sueca_Esq_Denia)
+```
+Luego habra que comprobar si comparten el numero de columnas para ver si podemos apilar registros
+```{r}
+numero<-unlist(map(data,ncol),use.names=F)
+```
+Una vez hemos comprobado que todos ellos tienen de dimension de columna **`r ncol(Sueca_2)`**,ahora hay que ver si las variables evaluan lo mismo.Para ello veremos si coinciden en nombre y tipo.
+```{r}
+#El procedimiento del nombre
+variables_1=c()
+for (i in map(data,colnames)){
+  variables=(i==colnames( General_Prim_Chaflan_Donoso_Cortes))
+  variables_1=c(variables_1,variables)
+}
+#Si es TRUE son todas del mismo nombre
+#all(variables_1==TRUE)
+
+#El procedimiento del tipo
+ft<-function(x){unlist(lapply(x,class))}
+tipo_1=c()
+for (i in map(data,ft)){
+  tipo=(i==unlist(lapply(Cadiz_16,class)))
+  tipo_1=c(tipo_1,tipo)
+}
+#Si es TRUE son todas del mismo tipo
+#all(tipo_1==TRUE)
+```
+Una vez comprobado que los dataframes tienen el mismo número y nombre de columnas,es decir **`r ncol(Sueca_2)`** y
+`r colnames(Cadiz_16)` podemos juntarlos y trabajar con ellos.  
+
+El siguiente paso es unificarlos en un solo dataframe que tendrá este aspecto
+```{r}
+df<-rbind(Cadiz_16,Cadiz_3,Carles_Cervera_34,Carles_Cervera_Chaflan_Reina_Donya_Maria,Cuba_3,Doctor_Serrano_21,General_Prim_Chaflan_Donoso_Cortes,Puerto_Rico_21,Salvador_Abril_Chaflan_Maestro_Jose_Serrano,Sueca_2,Sueca_32,Sueca_61,Sueca_Esq_Denia,Vivons_Chaflan_Cadiz)
+
+df_1_1<-df[1:6, ]
+kable(df_1_1)
+```
+## Variables de nuestro dataframe
+
+Antes de empezar a analizar los datos en profuncdidad vamos a conocer lo que tenemos,es decir que información nos dan nuestras variables.
+```{r}
+df_1<-data_frame(Parametros=c("_id","recvTime","fiwareServicePart","entityType","entityId","LAeq","LAeq_d","LAeq_den","LAeq_e","LAeq_n","DateObserved","Place"),Significado=c(" Identificador para cada registro","Fecha en la que se insertó el dato en la plataforma"," Servicio de la plataforma VLCi al que pertenece el sensor","Tipo de entidad del sensor en la plataforma VLCi",
+"Identificador único del sensor en la plataforma VLCi","Nivel sonoro continuo equivalente. El período establecido para este sensor es de 1 minuto. Es una  media ponderada según la frecuencia que varía constantemente","Es un indicador de ruido asociado al día, donde al día le corresponden 12 horas, en el período que se extiende desde las 7 hasta las 19 horas","índice de ruido día-tarde-noche, es utilizado para determinar la molestia vinculada a la exposición al ruido","Es un indicador del nivel sonoro durante la tarde, donde a la tarde le corresponden 4 horas, en el período que se extiende desde las 19 hasta las 23 horas","Es un indicador del nivel sonoro durante la noche, donde a la noche le corresponden 8 horas, en el período que se extiende desde las 23 hasta las 7 horas","Día al que se refieren las medidas.","Lugar donde ocurrieron cada uno de los registros"))
+
+
+kable(df_1)
+
+```
+
+# Limpiado del dataframe
+En esta parte del estudio nos vamos a encargar de obtener un tidy dataset,es decir un dataframe mas representativo y claro.
+Para eso vamos a llevar a cabo distintos pasos para completarlo.
+
+## Seleccion de columnas adecuadas
+Primero hay que ver con que columnas nos quedamos y cuales no nos dan información valiosa y por lo tanto no nos quedamos con ellas.
+
+De primeras se puede observar como en las columnas entityType y fiwareServicePath  los datos guardados en cada una de ellas son los mismos.Si esto se cumple no nos interesaran como información ya que no añaden nada.
+```{r}
+#Viendo si la informacion es unica en cada variable
+conteo=c()
+for (p in data){
+  for (i in p[,3:4]){
+    n=length(unique(i))
+    conteo= c(conteo,n)
+  }
+}
+#all
+df<-df%>%select(-c('_id','recvTime','entityType','fiwareServicePath'))
+```
+Como nuestra suposición se cumple ya sabemos que estas dos columnas no aportan ninguna información.A parte,ni _id ni recvTime me aportan informacion ya que me es suficiente con la variable dateObserved en caso de recvTime e _id pierde su caracter identificador.
+```{r}
+kable(df[1:2,])
+```
+## Renombramiento de las variables
+Para la facilitación de las posteriores operaciones renombramos las columnas.
+```{r}
+df<-df%>%rename(ruido_min=LAeq,ruido_dia=LAeq_d,ruido_max=LAeq_den,ruido_tarde=LAeq_e,ruido_noche=LAeq_n)
+
+#evolucion de nuestro dataframe
+kable(df[1:2,])
+```
+## Cambio de tipo variables
+Hay ciertas a las que no les corresponde su tipo de dato
+```{r}
+df<-df%>% mutate(Place= as.factor(Place), entityId = as.factor(entityId), dateObserved = as.Date(dateObserved))
+```
+## Conjunto Tidy
+Hay que juntar las columnas de las variables que miden el ruido y luego separarlas en dos ,una con el tipo y otra con los valores
+```{r}
+df<-df  %>% pivot_longer(cols = starts_with("ruido"), names_to = "Tipo", values_to = "Valores", names_prefix = "_")%>% separate(Tipo, into=c("columna_tipo", "tipo"), sep="_")%>% select(-columna_tipo) %>% mutate(tipo=as.factor(tipo), Place=as.factor(Place))
+
+kable(head(df))
+```
+# Deteccion de outliers
+En esta parte vamos a buscar datos que no esten en un rango marcado por ellos mismos(los conocidos como outliers).Estos valores son conocidos como infinitos,perdidos o inusuales y provacan cambios en el comportamiento del analisis a traves de estadisticos de ellos y por tanto afectan al modelo.
+
+No existen valores negativos(que no puede ser) o valores muy alejados del resto
+```{r}
+#Estadisticos de la variable Valores
+summary(df$Valores)
+```
+Aun asi nos damos cuenta de que existen registros cuyo valor es infinito
+
+Procedemos de la siguiente forma
+
+En primer lugar determinamos la posicion de tanto los datos cuyo valor es infinito como 
+```{r}
+where<-which(df$Valores==Inf)
+```
+Como son solo dos el numero de infinitos podemos o bien obviar estos registros o imputarlos a la media
+En este caso los vamos a obviar
+```{r}
+df%>%filter(!Valores==Inf)
+```
+Ahora vamos a ver si existen valores `NA`
+```{r}
+is.na(df$Nivel_Sonoro) %>% sum()
+aggr(df, prop = FALSE, combined = TRUE, numbers = TRUE, sortVars = TRUE, sortCombs = TRUE)
+```
+Estos eran los unicos registros que contenian datos erroneos
+```{r}
+df_2<-df%>%filter(Valores==Inf)
+kable(df_2)
+```
+
+
+
