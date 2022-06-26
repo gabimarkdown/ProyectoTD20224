@@ -331,21 +331,23 @@ Primero vemos graficamente como la relacion entre dos variables para una misma m
 ```{r}
 r1<- Cuba_3$LAeq_n - mean(Cuba_3$LAeq_n)
 r2<- Cuba_3$LAeq_den - mean(Cuba_3$LAeq_den)
-ggplot(data.frame(r1,r2), aes(x=r1, y=r2)) +geom_point() +geom_hline(yintercept=0, color = "green") +geom_vline(xintercept=0, color = "red") 
+ggplot(data.frame(r1,r2), aes(x=r1, y=r2)) +geom_point() +geom_hline(yintercept=0, color = "green") +geom_vline(xintercept=0, color = "green") 
 ```
 Estas dos primeras variables **`r colnames(Cuba_3[,10])`** y **`r colnames(Cuba_3[,8])`** concentran una gran cantidad de puntos cerca por lo que parece que la relacion entre ellas es alta
 
 Vista la relacion grafica,para poder afinar mas en nuestro estudio vamos a aplicar el coeficiente de correlacion,la relacion lineal entre las dos variables.
 
 `1`.Los datos estan entre -1 y 1
+
 `2`.Si se acercan a uno el grado de relacion es alta
+
 `3`.Si se acercan a -1 el grado de relacion es minima
 ```{r}
 p1<-cbind(Cuba_3$LAeq_n, Cuba_3$LAeq_den)
 p2<-round(cor(p1),2)
-p2
+kable(p2)
 ```
-Como los valores son proximos a uno, **`r p2`**,podemos decir que el grado de relacion lineal entre ellos es alto.
+Como los valores son proximos a uno, podemos decir que el grado de relacion lineal entre ellos es alto.
 
 Ahora volvemos a aplicar estos mismos procedimientos sobre las variables **`r colnames(Cuba_3[,9])`** y **`r colnames(Cuba_3[,11])`**
 Procedimiento grafico
@@ -360,6 +362,88 @@ Procediemiento numerico
 ```{r}
 p3<- cbind(Cuba_3$LAeq_e, Cuba_3$dateObserved)
 p4<-round(cor(p3),2)
-p4
+kable(p4)
 ```
-Como los valores no son tan cercanos a uno,**`r p4`**,podemos decir que el grado de relacion lineal entre ellos es mas bajo que el de las dos primeras variables.
+Como los valores no son tan cercanos a uno,podemos decir que el grado de relacion lineal entre ellos es mas bajo que el de las dos primeras variables.
+
+
+# Preguntas
+
+Tras toda esta preparacion de los datos nos vamos a plantear una serie de preguntas:
+
+## ¿Cual es el mes donde mas ruido se produce?
+
+Para estudiar cada uno de los cinco tipos de ruido que hay tengo que definirlos
+Correspondiendo cada uno de ellos con:
+
+\-**min**: Nivel sonoro continuo equivalente. En este caso el período establecido para este sensor es de 1 minuto.\
+
+\-**dia**: Es un indicador de ruido asociado al día.\
+
+\-**tarde**: Es un indicador del nivel sonoro durante la tarde.\
+
+\-**noche**: Es un indicador del nivel sonoro durante la noche.\
+
+\-**max**: índice de ruido día-tarde-noche, es utilizado para determinar la molestia vinculada a la exposición al ruido.\
+```{r}
+ruidos<-c("max","tarde","noche","min","dia")
+```
+
+Me creo un grafico donde muestro con graficos boxplot cuales son los niveles de db que mas se producen a lo largo de cada mes del año para los cinco tipos de sonidos que hay
+```{r}
+MesContaminante <- df %>% filter(tipo %in% ruidos) %>% separate(dateObserved, c("Año","Mes","Dia"))
+MesContaminante %>% ggplot(aes(x = Mes, y = Valores, fill = Mes)) + geom_boxplot() + labs(title = paste0("Densidad del ruido ",sep="")) + facet_wrap(~tipo, scales = "free")
+```
+
+Podemos ver en cada grafica un indicador de ruido diferente para hacer el estudio del mes con más volumen de ruido en la ciudad de Valencia, en las diferentes zonas con medidores de contaminación acústica. En relación a todos los indicadores de ruido, por minuto, en días, tardes y noches, se observa que el mes en el que más contaminación acústica tiene la ciudad es Marzo, coincidiendo con la festividad de Fallas, que conlleva actos multitudinarios, pirotécnias y música en altos niveles.Los picos que hubieron durante el mes de Septiembre se deben a que las fallas se celebraron en 2021 en esas fechas ya que las dos ediciones anteriores fueron canceladas por covid
+
+## ¿Que estación del año es en la que menos se contamina?
+
+```{r}
+amd <- df %>% separate(dateObserved, c("Anyo","Mes","Dia"))
+amd <- amd %>% mutate(Anyo = as.integer(Anyo), Mes = as.integer(Mes), Dia = as.integer(Dia))
+for (i in 1:dim(amd[1])){
+  if (((amd[i, 'Mes']) >= 7 & (amd[i, 'Mes']) <= 8) | ((amd[i, 'Mes']) == 6 & (amd[i, 'Dia']) >= 21) | ((amd[i, 'Mes']) == 9 & (amd[i, 'Dia']) < 23)){
+    amd[i, 'Estacion'] <- 'Ver'
+  } else {
+    if (((amd[i, 'Mes']) >= 10 & (amd[i, 'Mes']) <= 11) | ((amd[i, 'Mes']) == 9 & (amd[i, 'Dia']) >= 23) | ((amd[i, 'Mes']) == 12 & (amd[i, 'Dia']) < 21)){
+      amd[i, 'Estacion'] <- 'Ot'
+    } else {
+      if (((amd[i, 'Mes']) >= 1 & (amd[i, 'Mes']) <= 2) | ((amd[i, 'Mes']) == 12 & (amd[i, 'Dia']) >= 21) | ((amd[i, 'Mes']) == 3 & (amd[i, 'Dia']) < 20)){
+        amd[i, 'Estacion'] <-  'Inv'
+      } else {
+        amd[i, 'Estacion'] <-  'Pri'
+      }
+    }
+  }
+}
+```
+
+```{r}
+amd %>% group_by(Estacion) %>% summarize(Media = mean(Valores, na.rm = T)) %>% 
+  ggplot(aes(x = Estacion, y = Media, fill = Estacion)) + geom_bar(stat = 'identity') + ggtitle('Media de ruido por estación')
+amd <- amd %>% 
+  mutate(Anyo = as.factor(Anyo))
+g2020<- amd %>%
+  filter(Anyo == 2020) %>% 
+  group_by(Estacion) %>% 
+  summarize(m = mean(Valores)) %>% 
+  ggplot(aes(x = Estacion, y = m, fill = Estacion)) + geom_bar(stat = 'identity') + ggtitle('Media dB 2020')
+g2021 <- amd %>%
+  filter(Anyo == 2021) %>% 
+  group_by(Estacion) %>% 
+  summarize(m = mean(Valores)) %>% 
+  ggplot(aes(x = Estacion, y = m, fill = Estacion)) + geom_bar(stat = 'identity') + ggtitle('Media dB 2021')
+g2022 <- amd %>%
+  filter(Anyo == 2022) %>% 
+  group_by(Estacion) %>% 
+  summarize(m = mean(Valores)) %>% 
+  ggplot(aes(x = Estacion, y = m, fill = Estacion)) + geom_bar(stat = 'identity') + ggtitle('Media dB 2022')
+
+g2020
+g2021
+g2022
+#g2020+g2021+g2022 No se porque no me va,me tendria que ir
+```
+
+Como podemos ver, en líneas generales todas la estaciones suelen tener una media de ruido parecida estando el verano un escalón por encima. Algo también a destacar es la disparidad que encontramos en el año 2021 donde el ruido captado en verano es mayor que en el resto de estaciones esto es debido a que en 2021 las fallas se celebraron a principios de septiembre
