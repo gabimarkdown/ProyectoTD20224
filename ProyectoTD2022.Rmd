@@ -257,25 +257,69 @@ Aun asi nos damos cuenta de que existen registros cuyo valor es infinito
 
 Procedemos de la siguiente forma
 
-En primer lugar determinamos la posicion de tanto los datos cuyo valor es infinito como 
+En primer lugar determinamos la posicion de los datos cuyo valor es infinito 
 ```{r}
 where<-which(df$Valores==Inf)
+#posiciones de los inf
+kable(where)
 ```
-Como son solo dos el numero de infinitos podemos o bien obviar estos registros o imputarlos a la media
-En este caso los vamos a obviar
+Como son solo dos el numero de infinitos podemos o bien obviar estos registros o imputarlos a la media.
+
 ```{r}
-df%>%filter(!Valores==Inf)
+df<-df%>%filter(!Valores==Inf)
 ```
-Ahora vamos a ver si existen valores `NA`
+Nos quedamos con un dataframe de **`r nrow(df)`**
+
+Luego comprobamos si existen valores `NA`
 ```{r}
-is.na(df$Nivel_Sonoro) %>% sum()
-aggr(df, prop = FALSE, combined = TRUE, numbers = TRUE, sortVars = TRUE, sortCombs = TRUE)
+#is.na(df$Nivel_Sonoro) %>% sum()
 ```
-Estos eran los unicos registros que contenian datos erroneos
+No existen datos `NA` y por lo tanto estos eran los unicos registros que contenian datos erroneos.
 ```{r}
 df_2<-df%>%filter(Valores==Inf)
 kable(df_2)
 ```
+#Analisis Exploratorio
+Finalmente en esta parte del estudio nos dedicaremos a analizar los datos y sacar informacion sobre ellos.
+
+## Analisis univariante y Estaditicos
+
+Lo primero que haremos de todo será definirnos una serie de estadisticos basicos sobre los que trabajaremos en variables numericas
+```{r}
+estadisticos<-list(min=min ,max=max ,mean=mean,median=median,var=var,sd=sd,IQR=IQR)
+df_3<-data_frame(estadisticos=c("min","max","mean","median","var","sd","IQR"),Significado=c("Calcula del minimo de los datos","Calcula del maximo de los datos","Calculo de la media de los datos","Calculo de la mediana de los datos","Medida de dispersion de datos","Medida de dispersion de datos","Medida de dispersion de datos"))
+kable(df_3)
+```
+Aplicamos los estadisticos sobre nuestra variable numerica,Valores.Si hubiese algun valor perdido `NA` hay que eliminar 
+```{r}
+estadisticas<- summarise(df, across("Valores", estadisticos, na.rm=TRUE)) %>% 
+pivot_longer(names_to = "VariableEstadístico", values_to = "Valor", cols = c(1:7)) %>% 
+separate(VariableEstadístico, c("Variable", "Stat"), "_") %>% select(-Variable)
+
+kable(estadisticas)
+```
+Estas estadisticas nos confirman que todo valor outlier que pudiese perjudicar su valor han sido eliminados correctamente ya que todos los valores son logicos.
+
+Este diagrama nos muestra como de eficaz pueden llegar a ser los estadisticos para el analisis de los datos
+```{r}
+plot(x = df$dateObserved, y = df$Valores, main = "Cantidad Sonido - Fecha Observación", xlab = "Fecha", ylab = "Sonido")
+```
+Los valores que obtenemos en el estudio estadistico coinciden con los mostrados en el diagrama
+Los valores medios y medianas se acercan a lo representado,el valor minimo se ve que se acerca a 21...
+
+Al final los estadisticos buscan darnos un hilo al que seguir a la hora de analizar un conjunto de datos,pero no podemos basarlo todo en ellos yaque no son lo suficentemente concretos
+
+Los siguiente será ver si las variables siguen un tipo de distribución gaussiana o no.
+```{r}
+car::qqPlot(df$Valores,ylim=range(20,100,na.rm=T))
+```
+Como podemos ver es que nuestro conjunto de datos no sigue una distribucion gaussiana.Esto habrá que tenerlo en cuenta para el posterior analisis
+
+Para ver la distribcuion de los valores del sonido vamos a representar un histograma.
+```{r}
+df %>%  ggplot(aes(x=Valores)) + geom_histogram(aes(y=stat(density)),breaks=seq(40,98),fill="red",col="black",) + geom_density()
+```
+Podemos ver que aunque parezca que sigue una distribucion gaussiana,es irregular en partes.
 
 
 
