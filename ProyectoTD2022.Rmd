@@ -321,5 +321,45 @@ df %>%  ggplot(aes(x=Valores)) + geom_histogram(aes(y=stat(density)),breaks=seq(
 ```
 Podemos ver que aunque parezca que sigue una distribucion gaussiana,es irregular en partes.
 
+## Analisis Bivariante
 
+Analisis bivariante como se le conoce el analisis de la relacion entre dos variables(correlacion/covarianza).
 
+Una forma de ver la asociacion numerica entre dos variables es la covarianza.Esta forma nos indica donde tiende a estar una variable cuando la otra esta por debajo o encima de su media.
+
+Primero vemos graficamente como la relacion entre dos variables para una misma medicion en calle,en este caso para Cuba_3.Este analisis grafico no sera tan eficiente como la aplicacion del coeficiente de correlacion pero si nos servira de guia
+```{r}
+r1<- Cuba_3$LAeq_n - mean(Cuba_3$LAeq_n)
+r2<- Cuba_3$LAeq_den - mean(Cuba_3$LAeq_den)
+ggplot(data.frame(r1,r2), aes(x=r1, y=r2)) +geom_point() +geom_hline(yintercept=0, color = "green") +geom_vline(xintercept=0, color = "red") 
+```
+Estas dos primeras variables **`r colnames(Cuba_3[,10])`** y **`r colnames(Cuba_3[,8])`** concentran una gran cantidad de puntos cerca por lo que parece que la relacion entre ellas es alta
+
+Vista la relacion grafica,para poder afinar mas en nuestro estudio vamos a aplicar el coeficiente de correlacion,la relacion lineal entre las dos variables.
+
+`1`.Los datos estan entre -1 y 1
+`2`.Si se acercan a uno el grado de relacion es alta
+`3`.Si se acercan a -1 el grado de relacion es minima
+```{r}
+p1<-cbind(Cuba_3$LAeq_n, Cuba_3$LAeq_den)
+p2<-round(cor(p1),2)
+p2
+```
+Como los valores son proximos a uno, **`r p2`**,podemos decir que el grado de relacion lineal entre ellos es alto.
+
+Ahora volvemos a aplicar estos mismos procedimientos sobre las variables **`r colnames(Cuba_3[,9])`** y **`r colnames(Cuba_3[,11])`**
+Procedimiento grafico
+```{r}
+r3<- Cuba_3$LAeq_e - mean(Cuba_3$LAeq_e)
+r4<- Cuba_3$dateObserved - mean(Cuba_3$dateObserved)
+ggplot(data.frame(r3,r4), aes(x=r3, y=r4)) +geom_point() +geom_hline(yintercept=0, color = "green") +geom_vline(xintercept=0, color = "green") 
+```
+A simple vista se ven los datos mas dispersos que en grafico anterior
+
+Procediemiento numerico
+```{r}
+p3<- cbind(Cuba_3$LAeq_e, Cuba_3$dateObserved)
+p4<-round(cor(p3),2)
+p4
+```
+Como los valores no son tan cercanos a uno,**`r p4`**,podemos decir que el grado de relacion lineal entre ellos es mas bajo que el de las dos primeras variables.
